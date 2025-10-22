@@ -55,8 +55,30 @@ document.addEventListener("DOMContentLoaded", () => {
             emailSpan.className = "participant-email";
             emailSpan.textContent = p;
 
+            // Botón de eliminación
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-participant-btn";
+            deleteBtn.title = "Eliminar participante";
+            deleteBtn.innerHTML = "&#128465;"; // icono de papelera Unicode
+            deleteBtn.addEventListener("click", async (e) => {
+              e.stopPropagation();
+              if (confirm(`¿Seguro que deseas eliminar a ${p} de ${name}?`)) {
+                try {
+                  const response = await fetch(`/activities/${encodeURIComponent(name)}/remove?email=${encodeURIComponent(p)}`, { method: "POST" });
+                  if (response.ok) {
+                    fetchActivities();
+                  } else {
+                    alert("No se pudo eliminar al participante.");
+                  }
+                } catch {
+                  alert("Error de red al eliminar participante.");
+                }
+              }
+            });
+
             li.appendChild(badge);
             li.appendChild(emailSpan);
+            li.appendChild(deleteBtn);
             ul.appendChild(li);
           });
 
@@ -123,9 +145,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (response.ok) {
-        messageDiv.textContent = result.message;
-        messageDiv.className = "success";
-        signupForm.reset();
+  messageDiv.textContent = result.message;
+  messageDiv.className = "success";
+  signupForm.reset();
+  // Actualizar la lista de actividades tras registro
+  fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
